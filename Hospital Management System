@@ -1,0 +1,247 @@
+import 'dart:io' ;
+
+abstract class Person {
+  final String name;
+  final int age;
+
+  const Person(this.name, this.age);
+
+  void displayInfo();
+}
+
+
+class Doctor extends Person {
+  final String specialization;
+
+  Doctor(String name, int age, this.specialization)
+      : super(name, age);
+
+  @override
+  void displayInfo() {
+    print("Doctor Name: $name");
+    print("Age: $age");
+    print("Specialization: $specialization");
+    print("----------------------");
+  }
+}
+
+
+class Patient extends Person {
+  String _patientId;
+  Doctor? _doctor;
+
+  Patient(String name, int age, String patientId)
+      : _patientId = patientId,
+        _doctor = null,
+        super(name, age);
+
+
+  Patient.guest()
+      : _patientId = "GUEST",
+        _doctor = null,
+        super("Guest Patient", 0);
+
+
+  String get patientId => _patientId;
+
+  set patientId(String id) {
+    if (id.trim().isEmpty) {
+      print("Patient ID cannot be empty!");
+    } else {
+      _patientId = id.trim();
+    }
+  }
+
+  void bookAppointment(Doctor doctor) {
+    _doctor = doctor;
+    print("Appointment booked successfully!");
+  }
+
+  @override
+  void displayInfo() {
+    print("Patient Name: $name");
+    print("Age: $age");
+    print("Patient ID: $_patientId");
+
+    if (_doctor != null) {
+      print("Assigned Doctor: ${_doctor!.name}");
+    } else {
+      print("No doctor assigned yet.");
+    }
+
+    print("----------------------");
+  }
+}
+
+
+class Hospital {
+  List<Doctor> doctors = [];
+  List<Patient> patients = [];
+
+
+  void addDoctor(Doctor doctor) {
+    doctors.add(doctor);
+    print("Doctor added successfully!");
+  }
+
+  void addPatient(Patient patient) {
+    bool exists = patients.any(
+            (p) => p.patientId == patient.patientId
+    );
+
+    if (exists) {
+      print("Patient ID already exists!");
+    } else {
+      patients.add(patient);
+      print("Patient added successfully!");
+    }
+  }
+
+  void displayDoctors() {
+    if (doctors.isEmpty) {
+      print("No doctors available.");
+      return;
+    }
+
+    for (Doctor doctor in doctors) {
+      doctor.displayInfo();
+    }
+  }
+
+  void displayPatients() {
+    if (patients.isEmpty) {
+      print("No patients available.");
+      return;
+    }
+
+    for (Patient patient in patients) {
+      patient.displayInfo();
+    }
+  }
+
+  void bookAppointment(String patientId, String doctorName) {
+    Patient? selectedPatient;
+    Doctor? selectedDoctor;
+
+    for (Patient patient in patients) {
+      if (patient.patientId == patientId) {
+        selectedPatient = patient;
+        break;
+      }
+    }
+
+    for (Doctor doctor in doctors) {
+      if (doctor.name.toLowerCase() ==
+          doctorName.toLowerCase()) {
+        selectedDoctor = doctor;
+        break;
+      }
+    }
+
+    if (selectedPatient == null) {
+      print("Patient ID not found!");
+      return;
+    }
+
+    if (selectedDoctor == null) {
+      print("Doctor name not found!");
+      return;
+    }
+
+    selectedPatient.bookAppointment(selectedDoctor);
+  }
+}
+
+
+void main() {
+  Hospital hospital = Hospital();
+
+  bool running = true;
+
+  while (running) {
+    print("\n===== Hospital Management System =====");
+    print("1. Add Doctor");
+    print("2. Add Patient");
+    print("3. Display Doctors");
+    print("4. Display Patients");
+    print("5. Book Appointment");
+    print("6. Exit");
+
+    stdout.write("Choose an option: ");
+
+    String choice = stdin.readLineSync() ?? "";
+
+    switch (choice) {
+
+      case "1":
+        stdout.write("Enter Doctor Name: ");
+        String name = stdin.readLineSync() ?? "";
+
+        stdout.write("Enter Doctor Age: ");
+        int? age = int.tryParse(stdin.readLineSync() ?? "");
+
+        stdout.write("Enter Specialization: ");
+        String specialization = stdin.readLineSync() ?? "";
+
+        if (name.trim().isEmpty ||
+            age == null ||
+            age < 0 ||
+            specialization.trim().isEmpty) {
+          print("Invalid doctor information!");
+          break;
+        }
+
+        Doctor doctor = Doctor(name, age, specialization);
+        hospital.addDoctor(doctor);
+        break;
+
+      case "2":
+        stdout.write("Enter Patient Name: ");
+        String name = stdin.readLineSync() ?? "";
+
+        stdout.write("Enter Patient Age: ");
+        int? age = int.tryParse(stdin.readLineSync() ?? "");
+
+        stdout.write("Enter Patient ID: ");
+        String id = stdin.readLineSync() ?? "";
+
+        if (name.trim().isEmpty ||
+            age == null ||
+            age < 0 ||
+            id.trim().isEmpty) {
+          print("Invalid patient information!");
+          break;
+        }
+
+        Patient patient = Patient(name, age, id);
+        hospital.addPatient(patient);
+        break;
+
+      case "3":
+        hospital.displayDoctors();
+        break;
+
+      case "4":
+        hospital.displayPatients();
+        break;
+
+      case "5":
+        stdout.write("Enter Patient ID: ");
+        String patientId = stdin.readLineSync() ?? "";
+
+        stdout.write("Enter Doctor Name: ");
+        String doctorName = stdin.readLineSync() ?? "";
+
+        hospital.bookAppointment(patientId, doctorName);
+        break;
+
+      case "6":
+        print("Thank you for using Hospital Management System!");
+        running = false;
+        break;
+
+      default:
+        print("Invalid option! Please try again.");
+    }
+  }
+}
